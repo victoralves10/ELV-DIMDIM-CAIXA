@@ -4,6 +4,18 @@ Projeto do **2º Checkpoint (2º semestre)** da disciplina *DevOps Tools & Cloud
 
 > Grupo: **ELV** · Vídeo de demonstração: **[LINK_DO_VIDEO](https://youtube.com/)**
 
+## 📑 Sumário
+
+- [📌 Descrição da solução](#-descrição-da-solução)
+- [🏗️ Arquitetura](#️-arquitetura)
+- [🗄️ Banco de dados](#️-banco-de-dados)
+- [🧰 Tecnologias](#-tecnologias)
+- [📁 Estrutura do repositório](#-estrutura-do-repositório)
+- [🛤️ Rotas da aplicação](#️-rotas-da-aplicação)
+- [🚀 How to — implantação completa na nuvem](#-how-to--implantação-completa-na-nuvem)
+- [🔐 Segurança](#-segurança)
+- [🫂 Integrantes](#-integrantes)
+
 ---
 
 ## 📌 Descrição da solução
@@ -22,7 +34,7 @@ Toda a solução roda na Microsoft Azure:
 - **Azure App Service (Web App)** hospeda a aplicação (`.jar`, Java 17, Linux)
 - **Azure SQL Database** guarda os dados (PaaS, não containerizado)
 - **Application Insights** monitora a aplicação e as chamadas ao banco (dependências SQL)
-- **Azure CLI + GitHub Actions** automatizam a criação dos recursos e o deploy
+- **Azure CLI + az webapp deploy** automatizam a criação dos recursos e o deploy
 
 ---
 
@@ -31,8 +43,8 @@ Toda a solução roda na Microsoft Azure:
 ![Arquitetura da solução](docs/arquitetura.png)
 
 **Fluxo:**
-1. O grupo roda o script `scripts/deploy-dimdim.sh` no **Azure Cloud Shell**, que cria todos os recursos (Resource Group, SQL Server, Database, Application Insights, App Service Plan e Web App) e configura as variáveis de ambiente.
-2. Cada `git push` na branch `main` dispara o **GitHub Actions**, que compila o projeto com Maven e publica o `.jar` no **Web App**.
+1. O script `scripts/deploy-dimdim.sh` é executado no **Azure Cloud Shell** e cria todos os recursos (Resource Group, SQL Server, Database, firewall, Application Insights, App Service Plan e Web App) e configura as variáveis de ambiente do Web App.
+2. No próprio Cloud Shell, o projeto é clonado do **GitHub**, compilado com **Maven** (`mvn clean package`) e publicado no **Web App** com `az webapp deploy` (arquivo `.jar`).
 3. O usuário acessa o Web App por **HTTPS**; a aplicação grava e lê os dados no **Azure SQL Database** via JDBC (TLS, porta 1433).
 4. O agente Java do **Application Insights** coleta requisições, tempos de resposta, falhas e as **consultas SQL** feitas ao banco.
 
@@ -74,20 +86,20 @@ erDiagram
 - Thymeleaf + Bootstrap 5 (front-end renderizado no servidor — **não é API**)
 - Driver `mssql-jdbc` (Azure SQL Database)
 - Azure App Service (Linux, F1), Azure SQL Database (Basic), Application Insights
-- Azure CLI e GitHub Actions
+- Azure CLI (Cloud Shell) e `az webapp deploy`
 
 ---
 
 ## 📁 Estrutura do repositório
 
 ```
-dimdim-caixa/
+ELV-DIMDIM-CAIXA/
 ├── docs/
-│   └── arquitetura.svg          # desenho da arquitetura
+│   ├── arquitetura.png          # desenho da arquitetura
+│   └── arquitetura.svg
 ├── scripts/
-│   ├── deploy-dimdim.sh         # Azure CLI: cria recursos + configura deploy
-│   ├── ddl.sql                  # DDL das tabelas
-│   └── consultas.sql            # SELECTs para conferir a persistência
+│   ├── deploy-dimdim.sh         # Azure CLI: cria os recursos + build + deploy
+│   └── ddl.sql                  # DDL das tabelas
 ├── src/main/java/com/dimdim/caixa/
 │   ├── controller/              # Home, Cliente, Conta, Caixa
 │   ├── model/                   # Cliente, Conta, TipoConta
@@ -135,74 +147,58 @@ dimdim-caixa/
 ### Pré-requisitos
 
 - Conta na **Azure** com permissão para criar recursos, numa região permitida pela Policy da FIAP: `southcentralus`, `brazilsouth`, `chilecentral`, `mexicocentral` ou `southafricanorth`
-- Conta no **GitHub**
 - Acesso ao **Azure Cloud Shell** (Bash) em https://shell.azure.com
 
-### 1. Criar o seu repositório no GitHub
-
-1. Faça **fork** deste repositório (ou crie um repositório novo e envie o código).
-2. Anote o nome no formato `usuario/repositorio` (ex.: `fulano/dimdim-caixa`).
-
-### 2. Clonar o projeto no Cloud Shell
+### 1. Abrir o Cloud Shell e conferir a assinatura
 
 ```bash
-git clone https://github.com/victoralves10/ELV-DIMDIM-CAIXA.git
-cd ELV-DIMDIM-CAIXA/scripts
+az account show --query name -o tsv
 ```
 
-### 3. Ajustar as variáveis do script
+### 2. Ajustar as variáveis
 
-Abra o script e altere **RM**, **LOCATION** e **GITHUB_REPO_NAME** no topo:
-
-```bash
-code deploy-dimdim.sh
-```
+No início do `scripts/deploy-dimdim.sh` ficam os nomes dos recursos. Ajuste o RM e a região, se necessário:
 
 ```bash
-RM="rm561833"
+RESOURCE_GROUP_NAME="rg-dimdim"
+SQL_SERVER_NAME="sql-server-dimdim-rm561713-southafricanorth"
+SQL_DB_NAME="db-dimdim"
+WEBAPP_NAME="dimdim-caixa-rm561713"
+APP_SERVICE_PLAN="dimdim-caixa"
 LOCATION="southafricanorth"
-GITHUB_REPO_NAME="victoralves10/ELV-DIMDIM-CAIXA"
+RUNTIME="JAVA:17-java17"
+APP_INSIGHTS_NAME="ai-dimdim-caixa"
 ```
 
-### 4. Executar o script de criação dos recursos
+### 3. Executar o script
 
-```bash
-bash deploy-dimdim.sh
-```
+Cole os blocos do `scripts/deploy-dimdim.sh` no Cloud Shell, na ordem. O script:
 
-O script vai:
+1. Cria o **Resource Group**.
+2. Registra o provider `Microsoft.Sql` e cria o **Azure SQL Server** e o banco **db-dimdim** (Basic).
+3. Cria a regra de **firewall** do SQL Server.
+4. Registra os providers `Microsoft.Web`, `Microsoft.Insights` e `Microsoft.OperationalInsights` e instala a extensão `application-insights`.
+5. Cria o **Application Insights**, o **App Service Plan** (F1, Linux) e o **Web App** (Java 17).
+6. Clona o projeto do GitHub e compila com `mvn clean package`.
+7. Configura as **App Settings** do Web App: agente do Application Insights e `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` e `SPRING_DATASOURCE_PASSWORD`.
+8. Conecta o Web App ao Application Insights.
+9. Faz o deploy do `.jar` com `az webapp deploy`.
 
-1. Pedir a **senha do administrador do SQL Server** (digitada no terminal, nunca gravada no repositório — use letras maiúsculas, minúsculas, números e símbolo, com no mínimo 8 caracteres).
-2. Registrar os providers e criar o **Resource Group**.
-3. Criar o **Azure SQL Server** e o banco **db-dimdim** (Basic).
-4. Liberar no firewall os **serviços do Azure** (para o Web App) e o **IP do Cloud Shell**.
-5. Criar as tabelas executando o `ddl.sql`.
-6. Criar o **Application Insights**, o **App Service Plan** (F1, Linux) e o **Web App** (Java 17).
-7. Configurar as **App Settings** do Web App: string de conexão do Application Insights e `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` e `SPRING_DATASOURCE_PASSWORD`.
-8. Conectar o Web App ao Application Insights.
-9. Configurar o **GitHub Actions** (vai pedir para você autorizar o acesso ao GitHub pelo navegador).
+### 4. Criar as tabelas
 
-> 💡 Se o Cloud Shell não tiver `sqlcmd`, o script avisa: abra **Portal Azure → SQL databases → db-dimdim → Query editor**, faça login com o usuário `user-dimdim` e a senha, cole o conteúdo de `scripts/ddl.sql` e clique em **Run**.
+Depois que o banco estiver criado: **Portal Azure → SQL databases → db-dimdim → Query editor**, login com **SQL authentication** (usuário `user-dimdim`), cole o conteúdo de [`scripts/ddl.sql`](scripts/ddl.sql) e clique em **Run**.
 
-### 5. Acompanhar o deploy automático
-
-1. No GitHub, abra a aba **Actions** do repositório.
-2. O workflow criado pelo script (`.github/workflows/...yml`) compila o projeto com Maven e publica o `.jar` no Web App.
-3. Aguarde o job ficar verde ✅. A partir de agora, todo `git push` na `main` faz um novo deploy.
-
-> Se o workflow não começar sozinho, faça um commit qualquer (ex.: editar o README) e dê `git push`.
-
-### 6. Acessar a aplicação
+### 5. Acessar a aplicação
 
 ```
-https://dimdim-caixa-rm561833.azurewebsites.net
+https://dimdim-caixa-rm561713.azurewebsites.net
 ```
 
 > No plano F1 a primeira abertura pode levar até 1 minuto (o app "acorda").
 
-### 7. Testar o CRUD e conferir a persistência no banco
+### 6. Testar o CRUD e conferir a persistência no banco
 
-Abra o **Query editor** do `db-dimdim` no portal e use os SELECTs de [`scripts/consultas.sql`](scripts/consultas.sql) **depois de cada operação**:
+Abra o **Query editor** do `db-dimdim` e rode `SELECT * FROM dbo.cliente;` e `SELECT * FROM dbo.conta;` **depois de cada operação**:
 
 | # | Operação na aplicação | Conferir no banco |
 |---|---|---|
@@ -216,31 +212,25 @@ Abra o **Query editor** do `db-dimdim` no portal e use os SELECTs de [`scripts/c
 | 8 | **Contas → Encerrar** | a linha some de `dbo.conta` |
 | 9 | **Clientes → Excluir** | a linha some de `dbo.cliente` (e as contas, em cascata) |
 
-### 8. Ver o monitoramento no Application Insights
+### 7. Ver o monitoramento no Application Insights
 
 No portal: **Application Insights → ai-dimdim-caixa**
 
-- **Live Metrics**: requisições acontecendo em tempo real enquanto você usa o app
+- **Live metrics**: requisições acontecendo em tempo real enquanto você usa o app
 - **Application map**: Web App → banco `db-dimdim` (dependência SQL)
-- **Performance**: tempo de cada rota (`POST /clientes`, `POST /caixa/operacao`...)
-- **Transaction search**: cada requisição com as consultas SQL executadas
+- **Performance**: tempo de cada rota (`POST /clientes`, `POST /caixa/operacao`...) e, na aba Dependencies, as chamadas SQL
+- **Search**: cada requisição com as consultas SQL executadas
 - **Failures**: erros, se houver
 
 > Os dados podem levar de 2 a 5 minutos para aparecer.
-
-### 9. Limpar os recursos (depois da entrega)
-
-```bash
-az group delete --name rg-dimdim-caixa --yes --no-wait
-```
 
 ---
 
 ## 🔐 Segurança
 
-- Nenhuma credencial fica no código: o `application.properties` lê `SPRING_DATASOURCE_*` de variáveis de ambiente, configuradas nas **App Settings** do Web App.
-- A senha do banco é digitada no Cloud Shell na hora de rodar o script.
-- O firewall do SQL Server libera só os serviços do Azure e o IP do Cloud Shell (sem `0.0.0.0–255.255.255.255`).
+- O código da aplicação não tem credenciais: o `application.properties` lê `SPRING_DATASOURCE_*` de variáveis de ambiente, configuradas nas **App Settings** do Web App.
+- A conexão com o banco é criptografada (`encrypt=true`, porta 1433).
+- O firewall do SQL Server usa a regra `liberaGeral` (todos os IPs) apenas para fins de estudo; em produção, a liberação seria restrita aos serviços do Azure e a IPs específicos.
 
 ---
 
