@@ -248,6 +248,6 @@ az group delete --name rg-dimdim-caixa --yes --no-wait
 
 | RM | Nome |
 |---|---|
-| RM000000 | Nome do integrante |
-| RM000000 | Nome do integrante |
-| RM000000 | Nome do integrante |
+| RM561713 | Eduardo Batista Locaspi |
+| RM565698 | Liana Lyumi Morisita Fujisima |
+| RM561833 | Victor Alves Lopes |
