@@ -1,164 +1,133 @@
 #!/bin/bash
 # =====================================================================
-#  Projeto DimDim - Caixa Eletrônico (Spring Boot + Thymeleaf)
-#  Web App (PaaS) + Azure SQL Database (PaaS) + Application Insights
-#  Deploy automatizado: Azure CLI + GitHub Actions
-#
+#  Projeto DimDim - Web App + Azure SQL Database + Application Insights
 #  Executar no Azure Cloud Shell (Bash)
-#  ANTES DE RODAR: altere RM, LOCATION e GITHUB_REPO_NAME
 # =====================================================================
 
-set -e
-
-# ---------- Variáveis (ALTERE AQUI) ----------
-RM="rm561833"
-LOCATION="southafricanorth"                     # permitidas: southcentralus, brazilsouth, chilecentral, mexicocentral, southafricanorth
-GITHUB_REPO_NAME="victoralves10/ELV-DIMDIM-CAIXA"
-BRANCH="main"
-
-RESOURCE_GROUP_NAME="rg-dimdim-caixa"
-APP_SERVICE_PLAN="plan-dimdim-caixa"
-WEBAPP_NAME="dimdim-caixa-$RM"
+# ------ VARIAVEIS DE AMBIENTE
+RESOURCE_GROUP_NAME="rg-dimdim"
+SQL_SERVER_NAME="sql-server-dimdim-rm561713-southafricanorth"
+SQL_DB_NAME="db-dimdim"
+WEBAPP_NAME="dimdim-caixa-rm561713"
+APP_SERVICE_PLAN="dimdim-caixa"
+LOCATION="southafricanorth"
 RUNTIME="JAVA:17-java17"
 APP_INSIGHTS_NAME="ai-dimdim-caixa"
 
-SQL_SERVER_NAME="sql-server-dimdim-$RM"
-SQL_DB_NAME="db-dimdim"
-SQL_ADMIN_USER="user-dimdim"
+# ------ CRIAÇÃO DO GRUPO DE RECURSOS
+az group create --name $RESOURCE_GROUP_NAME --location $LOCATION
 
-# Senha lida no terminal: NUNCA deixe a senha escrita no repositório
-read -s -p "Digite a senha do admin do SQL Server: " SQL_ADMIN_PASSWORD
-echo
+# ------ BANCO DE DADOS
 
-# ---------- Providers e extensões ----------
-az provider register --namespace Microsoft.Web
+# Registrar o serviço que usaremos
 az provider register --namespace Microsoft.Sql
+
+# Criação do SQL DATABASE SERVER (SQL Server)
+az sql server create \
+--name $SQL_SERVER_NAME \
+--resource-group $RESOURCE_GROUP_NAME \
+--location $LOCATION \
+--admin-user user-dimdim \
+--admin-password 'Fiap@2tdsvms' \
+--enable-public-network true
+
+# Criação da SQL Database
+az sql db create \
+--resource-group $RESOURCE_GROUP_NAME \
+--server $SQL_SERVER_NAME \
+--name $SQL_DB_NAME \
+--service-objective Basic \
+--backup-storage-redundancy Local \
+--zone-redundant false
+
+# Criação do firewall do SQL Database Server
+az sql server firewall-rule create \
+--resource-group $RESOURCE_GROUP_NAME \
+--server $SQL_SERVER_NAME \
+--name liberaGeral \
+--start-ip-address 0.0.0.0 \
+--end-ip-address 255.255.255.255
+
+# ----- APLICAÇÃO BACKEND E FRONTEND
+
+# Registrar os serviços que usaremos
+az provider register --namespace Microsoft.Web
 az provider register --namespace Microsoft.Insights
 az provider register --namespace Microsoft.OperationalInsights
-az extension add --name application-insights --upgrade --only-show-errors
+az extension add --name application-insights
 
-# ---------- Grupo de Recursos ----------
-az group create --name $RESOURCE_GROUP_NAME --location "$LOCATION"
+# Definir Variáveis para os scripts
+WEBAPP_NAME="dimdim-caixa-rm561713"
+APP_SERVICE_PLAN="dimdim-caixa"
+LOCATION="southafricanorth"
+RUNTIME="JAVA:17-java17"
+BRANCH="main"
+APP_INSIGHTS_NAME="ai-dimdim-caixa"
 
-# ---------- Azure SQL Server + Database ----------
-az sql server create \
-  --name $SQL_SERVER_NAME \
-  --resource-group $RESOURCE_GROUP_NAME \
-  --location "$LOCATION" \
-  --admin-user $SQL_ADMIN_USER \
-  --admin-password "$SQL_ADMIN_PASSWORD" \
-  --enable-public-network true
-
-az sql db create \
-  --resource-group $RESOURCE_GROUP_NAME \
-  --server $SQL_SERVER_NAME \
-  --name $SQL_DB_NAME \
-  --service-objective Basic \
-  --backup-storage-redundancy Local \
-  --zone-redundant false
-
-# Firewall: permite que serviços do Azure (o Web App) acessem o banco
-az sql server firewall-rule create \
-  --resource-group $RESOURCE_GROUP_NAME \
-  --server $SQL_SERVER_NAME \
-  --name AllowAzureServices \
-  --start-ip-address 0.0.0.0 \
-  --end-ip-address 0.0.0.0
-
-# Firewall: libera o IP atual (Cloud Shell) para rodar o DDL
-MEU_IP=$(curl -s https://api.ipify.org)
-az sql server firewall-rule create \
-  --resource-group $RESOURCE_GROUP_NAME \
-  --server $SQL_SERVER_NAME \
-  --name AllowCloudShell \
-  --start-ip-address $MEU_IP \
-  --end-ip-address $MEU_IP
-
-# ---------- Criação das tabelas (DDL) ----------
-# Rode este script de dentro da pasta scripts/ (o ddl.sql fica ao lado dele)
-if command -v sqlcmd >/dev/null 2>&1; then
-  sqlcmd -S "$SQL_SERVER_NAME.database.windows.net" \
-         -d $SQL_DB_NAME \
-         -U $SQL_ADMIN_USER \
-         -P "$SQL_ADMIN_PASSWORD" \
-         -i ./ddl.sql
-else
-  echo ">> sqlcmd não encontrado: cole o conteúdo de ddl.sql no Query Editor do banco no portal Azure"
-fi
-
-# ---------- Application Insights ----------
+# Criar Application Insights
 az monitor app-insights component create \
-  --app $APP_INSIGHTS_NAME \
-  --location "$LOCATION" \
-  --resource-group $RESOURCE_GROUP_NAME \
-  --application-type web
+--app $APP_INSIGHTS_NAME \
+--location "$LOCATION" \
+--resource-group $RESOURCE_GROUP_NAME \
+--application-type web
 
-# ---------- Plano de Serviço + Web App ----------
+# Criar o Plano de Serviço
 az appservice plan create \
-  --name $APP_SERVICE_PLAN \
-  --resource-group $RESOURCE_GROUP_NAME \
-  --location "$LOCATION" \
-  --sku F1 \
-  --is-linux
+--name $APP_SERVICE_PLAN \
+--resource-group $RESOURCE_GROUP_NAME \
+--location "$LOCATION" \
+--sku F1 \
+--is-linux
 
+# Criar o Serviço de Aplicativo
 az webapp create \
-  --name $WEBAPP_NAME \
-  --resource-group $RESOURCE_GROUP_NAME \
-  --plan $APP_SERVICE_PLAN \
-  --runtime "$RUNTIME"
+--name $WEBAPP_NAME \
+--resource-group $RESOURCE_GROUP_NAME \
+--plan $APP_SERVICE_PLAN \
+--runtime "$RUNTIME"
 
-# Habilita autenticação básica (SCM) - necessária para o deploy
-az resource update \
-  --resource-group $RESOURCE_GROUP_NAME \
-  --namespace Microsoft.Web \
-  --resource-type basicPublishingCredentialsPolicies \
-  --name scm \
-  --parent sites/$WEBAPP_NAME \
-  --set properties.allow=true
+# git clone
+cd ~
+git clone https://github.com/victoralves10/ELV-DIMDIM-CAIXA.git
 
-# ---------- Variáveis de ambiente do App (credenciais ficam só no Azure) ----------
+# Acessar na pasta do projeto
+cd ELV-DIMDIM-CAIXA
+
+# Compilar seu Projeto
+mvn clean package
+
+# Entrar na pasta target
+cd target
+
+# ------- MONITORAMENTO
+
 CONNECTION_STRING=$(az monitor app-insights component show \
-  --app $APP_INSIGHTS_NAME \
-  --resource-group $RESOURCE_GROUP_NAME \
-  --query connectionString \
-  --output tsv)
+--app $APP_INSIGHTS_NAME \
+--resource-group $RESOURCE_GROUP_NAME \
+--query connectionString \
+--output tsv)
 
-JDBC_URL="jdbc:sqlserver://$SQL_SERVER_NAME.database.windows.net:1433;database=$SQL_DB_NAME;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;"
+# Configuração do Monitoramento
+az webapp config appsettings set --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP_NAME --settings \
+APPLICATIONINSIGHTS_CONNECTION_STRING="$CONNECTION_STRING" \
+ApplicationInsightsAgent_EXTENSION_VERSION="~3" \
+XDT_MicrosoftApplicationInsights_Mode="Recommended" \
+XDT_MicrosoftApplicationInsights_PreemptSdk="1" \
+SPRING_DATASOURCE_USERNAME="user-dimdim" \
+SPRING_DATASOURCE_PASSWORD="Fiap@2tdsvms" \
+SPRING_DATASOURCE_URL="jdbc:sqlserver://$SQL_SERVER_NAME.database.windows.net:1433;database=db-dimdim;encrypt=true;loginTimeout=30;"
 
-az webapp config appsettings set \
-  --name "$WEBAPP_NAME" \
-  --resource-group "$RESOURCE_GROUP_NAME" \
-  --settings \
-    APPLICATIONINSIGHTS_CONNECTION_STRING="$CONNECTION_STRING" \
-    ApplicationInsightsAgent_EXTENSION_VERSION="~3" \
-    XDT_MicrosoftApplicationInsights_Mode="Recommended" \
-    XDT_MicrosoftApplicationInsights_PreemptSdk="1" \
-    SPRING_DATASOURCE_URL="$JDBC_URL" \
-    SPRING_DATASOURCE_USERNAME="$SQL_ADMIN_USER" \
-    SPRING_DATASOURCE_PASSWORD="$SQL_ADMIN_PASSWORD"
-
+# Criar a conexão do nosso Web App com o Application Insights
 az monitor app-insights component connect-webapp \
-  --app $APP_INSIGHTS_NAME \
-  --web-app $WEBAPP_NAME \
-  --resource-group $RESOURCE_GROUP_NAME
+--app $APP_INSIGHTS_NAME \
+--web-app $WEBAPP_NAME \
+--resource-group $RESOURCE_GROUP_NAME
 
-az webapp restart --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP_NAME
+# ---------------- DEPLOY
 
-# ---------- Deploy automatizado com GitHub Actions ----------
-# O repositório precisa existir no GitHub com o código já enviado (git push)
-# Cada novo push na branch main dispara build + deploy automaticamente
-# --force sobrescreve o workflow se ele já existir (ex.: rodando o script pela 2ª vez)
-az webapp deployment github-actions add \
-  --name $WEBAPP_NAME \
-  --resource-group $RESOURCE_GROUP_NAME \
-  --repo $GITHUB_REPO_NAME \
-  --branch $BRANCH \
-  --login-with-github \
-  --force
-
-echo "======================================================"
-echo " App: https://$WEBAPP_NAME.azurewebsites.net"
-echo "======================================================"
-
-# ---------- Limpeza (rodar só no final) ----------
-# az group delete --name $RESOURCE_GROUP_NAME --yes --no-wait
+# Realizar o Deploy
+az webapp deploy \
+--resource-group $RESOURCE_GROUP_NAME \
+--name $WEBAPP_NAME \
+--src-path ./dimdim-caixa.jar \
+--type jar

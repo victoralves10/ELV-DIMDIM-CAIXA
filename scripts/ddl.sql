@@ -27,9 +27,3 @@ CREATE TABLE dbo.conta (
     CONSTRAINT fk_conta_cliente FOREIGN KEY (cliente_id)
         REFERENCES dbo.cliente(id) ON DELETE CASCADE
 );
-
--- Consultas para mostrar a persistência no vídeo (após cada operação CRUD)
--- SELECT * FROM dbo.cliente;
--- SELECT * FROM dbo.conta;
--- SELECT c.nome, ct.numero, ct.tipo, ct.saldo
---   FROM dbo.cliente c JOIN dbo.conta ct ON ct.cliente_id = c.id;
