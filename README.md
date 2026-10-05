@@ -28,7 +28,7 @@ Toda a solução roda na Microsoft Azure:
 
 ## 🏗️ Arquitetura
 
-![Arquitetura da solução](docs/arquitetura.svg)
+![Arquitetura da solução](docs/arquitetura.png)
 
 **Fluxo:**
 1. O grupo roda o script `scripts/deploy-dimdim.sh` no **Azure Cloud Shell**, que cria todos os recursos (Resource Group, SQL Server, Database, Application Insights, App Service Plan e Web App) e configura as variáveis de ambiente.
