@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Caixa Eletrônico')}"></head>
+<body class="atm-fundo">
+<style th:replace="~{caixa/atm :: estilo}"></style>
+<header th:replace="~{fragments/layout :: header('caixa')}"></header>
+
+<main class="container">
+    <div class="atm">
+        <div class="atm-topo"><span class="dd-logo">dd</span> CAIXA DIMDIM 24H</div>
+
+        <div class="atm-tela">
+            <div class="d-flex justify-content-between small mb-2">
+                <span th:text="'OLÁ, ' + ${#strings.toUpperCase(conta.cliente.nome)}">OLÁ</span>
+                <span th:text="'AG ' + ${conta.agencia} + ' CC ' + ${conta.numero}">AG CC</span>
+            </div>
+
+            <div class="text-center mb-3">
+                <div class="small">SALDO DISPONÍVEL</div>
+                <div class="atm-saldo" th:text="'R$ ' + ${#numbers.formatDecimal(conta.saldo, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
+            </div>
+
+            <div th:if="${mensagem}" class="alert alert-success" th:text="${mensagem}"></div>
+            <div th:if="${erro}" class="alert alert-danger" th:text="${erro}"></div>
+
+            <form th:action="@{/caixa/operacao}" method="post" autocomplete="off">
+                <div class="btn-group w-100 mb-3" role="group" aria-label="Operação">
+                    <input type="radio" class="btn-check" name="tipo" id="op-saque" value="SAQUE" checked>
+                    <label class="btn btn-outline-light atm-op text-center" for="op-saque"><i class="fas fa-arrow-up"></i> SAQUE</label>
+                    <input type="radio" class="btn-check" name="tipo" id="op-deposito" value="DEPOSITO">
+                    <label class="btn btn-outline-light atm-op text-center" for="op-deposito"><i class="fas fa-arrow-down"></i> DEPÓSITO</label>
+                </div>
+
+                <label for="valor" class="small">VALOR (R$)</label>
+                <input type="text" id="valor" name="valor" class="form-control mb-2"
+                       maxlength="12" inputmode="decimal" pattern="\d+(\.\d{1,2})?" required autofocus>
+
+                <div class="atm-rapido mb-1">
+                    <button type="button" class="btn btn-sm btn-outline-info" data-valor="20">20</button>
+                    <button type="button" class="btn btn-sm btn-outline-info" data-valor="50">50</button>
+                    <button type="button" class="btn btn-sm btn-outline-info" data-valor="100">100</button>
+                    <button type="button" class="btn btn-sm btn-outline-info" data-valor="200">200</button>
+                </div>
+                <button type="submit" class="d-none">Confirmar</button>
+            </form>
+
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <span class="small" style="color:#7fb6cc;">Escolha, digite o valor e pressione ENTRA</span>
+                <a th:href="@{/caixa/sair}" class="btn btn-sm btn-outline-warning"><i class="fas fa-sign-out-alt"></i> SAIR</a>
+            </div>
+        </div>
+
+        <div th:replace="~{caixa/atm :: teclado}"></div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script>
+    document.querySelectorAll('[data-valor]').forEach(function (b) {
+        b.addEventListener('click', function () {
+            const campo = document.getElementById('valor');
+            campo.value = b.dataset.valor;
+            campo.focus();
+        });
+    });
+</script>
+</body>
+</html>

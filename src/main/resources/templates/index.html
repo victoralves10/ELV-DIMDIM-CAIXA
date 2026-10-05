@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Início')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('home')}"></header>
+
+<main class="container">
+    <div class="text-center my-5">
+        <h1 class="fw-bold">Bem-vindo à DimDim</h1>
+        <p class="lead text-muted">Caixa eletrônico e gerência de clientes e contas, rodando 100% na nuvem Azure.</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <div class="col-md-4">
+            <a th:href="@{/caixa}" class="text-decoration-none text-reset">
+                <div class="dd-card p-4 h-100 text-center" style="background: #2E2E2E; color: #fff;">
+                    <i class="fas fa-money-bill-wave fa-3x mb-3" style="color: #FFE14D;"></i>
+                    <h4 class="fw-bold">Caixa Eletrônico</h4>
+                    <p class="mb-0 text-white-50">Saque, depósito e saldo com número da conta e PIN.</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a th:href="@{/clientes}" class="text-decoration-none text-reset">
+                <div class="dd-card p-4 h-100 text-center">
+                    <i class="fas fa-users fa-3x mb-3" style="color: #F5C400;"></i>
+                    <h4 class="fw-bold">Clientes</h4>
+                    <p class="mb-1 text-muted">Cadastre, edite e exclua clientes.</p>
+                    <span class="badge badge-tipo" th:text="${totalClientes} + ' cadastrados'">0 cadastrados</span>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a th:href="@{/contas}" class="text-decoration-none text-reset">
+                <div class="dd-card p-4 h-100 text-center">
+                    <i class="fas fa-wallet fa-3x mb-3" style="color: #F5C400;"></i>
+                    <h4 class="fw-bold">Contas</h4>
+                    <p class="mb-1 text-muted">Abra, altere e encerre contas dos clientes.</p>
+                    <span class="badge badge-tipo" th:text="${totalContas} + ' abertas'">0 abertas</span>
+                </div>
+            </a>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

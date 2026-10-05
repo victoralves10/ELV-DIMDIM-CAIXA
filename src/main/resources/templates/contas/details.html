@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Conta')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('contas')}"></header>
+
+<main class="container" style="max-width: 720px;">
+    <h2 class="dd-titulo"><i class="fas fa-wallet"></i> Conta <span th:text="${conta.numero}"></span></h2>
+
+    <div th:replace="~{fragments/layout :: alertas}"></div>
+
+    <div class="dd-card p-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+            <div>
+                <span class="badge badge-tipo mb-2" th:text="${conta.tipo.descricao}">Corrente</span>
+                <p class="mb-1"><strong>Agência:</strong> <span th:text="${conta.agencia}"></span></p>
+                <p class="mb-1"><strong>Conta:</strong> <span th:text="${conta.numero}"></span></p>
+                <p class="mb-1"><strong>Titular:</strong>
+                    <a th:href="@{/clientes/{id}(id=${conta.cliente.id})}" th:text="${conta.cliente.nome}"></a></p>
+                <p class="mb-0"><strong>Abertura:</strong>
+                    <span th:text="${#temporals.format(conta.dataAbertura, 'dd/MM/yyyy HH:mm')}"></span></p>
+            </div>
+            <div class="text-end">
+                <small class="text-muted">Saldo disponível</small>
+                <div class="fs-2 fw-bold" th:text="'R$ ' + ${#numbers.formatDecimal(conta.saldo, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap">
+            <a th:href="@{/contas/{id}/editar(id=${conta.id})}" class="btn btn-outline-warning"><i class="fas fa-pen"></i> Editar</a>
+            <form th:action="@{/contas/{id}/excluir(id=${conta.id})}" method="post"
+                  onsubmit="return confirm('Encerrar esta conta?');">
+                <button type="submit" class="btn btn-outline-danger"><i class="fas fa-trash"></i> Encerrar</button>
+            </form>
+        </div>
+    </div>
+
+    <a th:href="@{/contas}" class="btn btn-outline-secondary mt-4"><i class="fas fa-arrow-left"></i> Voltar</a>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

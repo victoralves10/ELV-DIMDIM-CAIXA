@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head(${conta.id == null} ? 'Abrir conta' : 'Editar conta')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('contas')}"></header>
+
+<main class="container" style="max-width: 640px;">
+    <h2 class="dd-titulo" th:text="${conta.id == null} ? 'Abrir conta' : 'Editar conta'">Abrir conta</h2>
+
+    <div th:replace="~{fragments/layout :: alertas}"></div>
+
+    <div th:if="${#lists.isEmpty(clientes)}" class="alert alert-warning">
+        Cadastre um cliente antes de abrir uma conta.
+        <a th:href="@{/clientes/novo}" class="alert-link">Cadastrar cliente</a>
+    </div>
+
+    <div class="dd-card p-4">
+        <form th:action="${conta.id == null} ? @{/contas} : @{/contas/{id}(id=${conta.id})}"
+              th:object="${conta}" method="post" novalidate>
+
+            <div class="mb-3">
+                <label for="titular" class="form-label">Cliente titular</label>
+                <select id="titular" th:field="*{cliente.id}" class="form-select"
+                        th:classappend="${#fields.hasErrors('cliente')} ? 'is-invalid'">
+                    <option value="">Selecione o cliente...</option>
+                    <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nome} + ' (CPF ' + ${c.cpf} + ')'">Cliente</option>
+                </select>
+                <div class="invalid-feedback" th:errors="*{cliente}"></div>
+            </div>
+
+            <div class="row">
+                <div class="col-5 mb-3">
+                    <label for="agencia" class="form-label">Agência</label>
+                    <input type="text" th:field="*{agencia}" class="form-control" maxlength="4" inputmode="numeric"
+                           th:classappend="${#fields.hasErrors('agencia')} ? 'is-invalid'">
+                    <div class="invalid-feedback" th:errors="*{agencia}"></div>
+                </div>
+                <div class="col-7 mb-3">
+                    <label for="numero" class="form-label">Número da conta</label>
+                    <input type="text" th:field="*{numero}" class="form-control" maxlength="10" inputmode="numeric"
+                           th:classappend="${#fields.hasErrors('numero')} ? 'is-invalid'" placeholder="Ex.: 12345">
+                    <div class="invalid-feedback" th:errors="*{numero}"></div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="tipo" class="form-label">Tipo de conta</label>
+                <select th:field="*{tipo}" class="form-select"
+                        th:classappend="${#fields.hasErrors('tipo')} ? 'is-invalid'">
+                    <option value="">Selecione...</option>
+                    <option th:each="t : ${tipos}" th:value="${t}" th:text="${t.descricao}">Tipo</option>
+                </select>
+                <div class="invalid-feedback" th:errors="*{tipo}"></div>
+            </div>
+
+            <div class="row">
+                <div class="col-5 mb-3">
+                    <label for="pin" class="form-label">PIN do caixa</label>
+                    <input type="text" th:field="*{pin}" class="form-control" maxlength="4" inputmode="numeric"
+                           th:classappend="${#fields.hasErrors('pin')} ? 'is-invalid'" placeholder="4 dígitos">
+                    <div class="invalid-feedback" th:errors="*{pin}"></div>
+                </div>
+                <div class="col-7 mb-3">
+                    <label for="saldo" class="form-label">Saldo inicial (R$)</label>
+                    <input th:if="${conta.id == null}" type="number" step="0.01" min="0" th:field="*{saldo}" class="form-control"
+                           th:classappend="${#fields.hasErrors('saldo')} ? 'is-invalid'">
+                    <div th:if="${conta.id == null}" class="invalid-feedback" th:errors="*{saldo}"></div>
+                    <input th:unless="${conta.id == null}" type="text" class="form-control" disabled
+                           th:value="${#numbers.formatDecimal(conta.saldo, 1, 'POINT', 2, 'COMMA')}">
+                    <small th:unless="${conta.id == null}" class="text-muted">O saldo muda só por saque e depósito no caixa.</small>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-dd mt-2"><i class="fas fa-save"></i> Salvar</button>
+            <a th:href="@{/contas}" class="btn btn-outline-secondary mt-2">Cancelar</a>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Clientes')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('clientes')}"></header>
+
+<main class="container">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h2 class="dd-titulo"><i class="fas fa-users"></i> Clientes</h2>
+        <a class="btn btn-dd" th:href="@{/clientes/novo}"><i class="fas fa-user-plus"></i> Novo cliente</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alertas}"></div>
+
+    <div class="dd-card p-3">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>Email</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(clientes)}">
+                    <td colspan="5" class="text-center text-muted py-4">Nenhum cliente cadastrado ainda.</td>
+                </tr>
+                <tr th:each="c : ${clientes}">
+                    <td th:text="${c.id}">1</td>
+                    <td th:text="${c.nome}">Nome</td>
+                    <td th:text="${c.cpf}">00000000000</td>
+                    <td th:text="${c.email}">email</td>
+                    <td class="text-end text-nowrap">
+                        <a th:href="@{/clientes/{id}(id=${c.id})}" class="btn btn-sm btn-outline-dark" title="Detalhes"><i class="fas fa-eye"></i></a>
+                        <a th:href="@{/clientes/{id}/editar(id=${c.id})}" class="btn btn-sm btn-outline-warning" title="Editar"><i class="fas fa-pen"></i></a>
+                        <form th:action="@{/clientes/{id}/excluir(id=${c.id})}" method="post" class="d-inline"
+                              onsubmit="return confirm('Excluir este cliente e TODAS as contas dele?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir"><i class="fas fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

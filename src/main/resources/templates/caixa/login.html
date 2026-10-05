@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Caixa Eletrônico')}"></head>
+<body class="atm-fundo">
+<style th:replace="~{caixa/atm :: estilo}"></style>
+<header th:replace="~{fragments/layout :: header('caixa')}"></header>
+
+<main class="container">
+    <div class="atm">
+        <div class="atm-topo"><span class="dd-logo">dd</span> CAIXA DIMDIM 24H</div>
+
+        <div class="atm-tela">
+            <h5 class="text-center mb-3">BEM-VINDO</h5>
+
+            <div th:if="${mensagem}" class="alert alert-success" th:text="${mensagem}"></div>
+            <div th:if="${erro}" class="alert alert-danger" th:text="${erro}"></div>
+
+            <form th:action="@{/caixa/entrar}" method="post" autocomplete="off">
+                <label for="numero" class="small">NÚMERO DA CONTA</label>
+                <input type="text" id="numero" name="numero" class="form-control mb-3"
+                       maxlength="10" inputmode="numeric" pattern="\d{4,10}" required autofocus>
+
+                <label for="pin" class="small">SENHA (PIN)</label>
+                <input type="password" id="pin" name="pin" class="form-control"
+                       maxlength="4" inputmode="numeric" pattern="\d{4}" required>
+
+                <button type="submit" class="d-none">Entrar</button>
+            </form>
+            <p class="small text-center mt-3 mb-0" style="color:#7fb6cc;">Digite e pressione ENTRA</p>
+        </div>
+
+        <div th:replace="~{caixa/atm :: teclado}"></div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

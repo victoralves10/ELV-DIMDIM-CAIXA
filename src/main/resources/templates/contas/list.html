@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Contas')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('contas')}"></header>
+
+<main class="container">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h2 class="dd-titulo"><i class="fas fa-wallet"></i> Contas</h2>
+        <a class="btn btn-dd" th:href="@{/contas/nova}"><i class="fas fa-plus"></i> Abrir conta</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alertas}"></div>
+
+    <div class="dd-card p-3">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Agência</th>
+                    <th>Conta</th>
+                    <th>Tipo</th>
+                    <th>Titular</th>
+                    <th class="text-end">Saldo</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(contas)}">
+                    <td colspan="7" class="text-center text-muted py-4">Nenhuma conta aberta ainda.</td>
+                </tr>
+                <tr th:each="ct : ${contas}">
+                    <td th:text="${ct.id}">1</td>
+                    <td th:text="${ct.agencia}">0001</td>
+                    <td th:text="${ct.numero}">12345</td>
+                    <td><span class="badge badge-tipo" th:text="${ct.tipo.descricao}">Corrente</span></td>
+                    <td><a th:href="@{/clientes/{id}(id=${ct.cliente.id})}" th:text="${ct.cliente.nome}">Titular</a></td>
+                    <td class="text-end" th:text="'R$ ' + ${#numbers.formatDecimal(ct.saldo, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+                    <td class="text-end text-nowrap">
+                        <a th:href="@{/contas/{id}(id=${ct.id})}" class="btn btn-sm btn-outline-dark" title="Detalhes"><i class="fas fa-eye"></i></a>
+                        <a th:href="@{/contas/{id}/editar(id=${ct.id})}" class="btn btn-sm btn-outline-warning" title="Editar"><i class="fas fa-pen"></i></a>
+                        <form th:action="@{/contas/{id}/excluir(id=${ct.id})}" method="post" class="d-inline"
+                              onsubmit="return confirm('Encerrar esta conta?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Encerrar"><i class="fas fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

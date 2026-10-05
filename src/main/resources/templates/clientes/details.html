@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Cliente')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header('clientes')}"></header>
+
+<main class="container">
+    <h2 class="dd-titulo"><i class="fas fa-user"></i> <span th:text="${cliente.nome}">Cliente</span></h2>
+
+    <div th:replace="~{fragments/layout :: alertas}"></div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="dd-card p-4 h-100">
+                <h5 class="fw-bold mb-3">Dados do cliente</h5>
+                <p class="mb-1"><strong>ID:</strong> <span th:text="${cliente.id}"></span></p>
+                <p class="mb-1"><strong>CPF:</strong> <span th:text="${cliente.cpf}"></span></p>
+                <p class="mb-1"><strong>Email:</strong> <span th:text="${cliente.email}"></span></p>
+                <p class="mb-3"><strong>Cadastro:</strong>
+                    <span th:text="${#temporals.format(cliente.dataCadastro, 'dd/MM/yyyy HH:mm')}"></span></p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a th:href="@{/clientes/{id}/editar(id=${cliente.id})}" class="btn btn-sm btn-outline-warning"><i class="fas fa-pen"></i> Editar</a>
+                    <form th:action="@{/clientes/{id}/excluir(id=${cliente.id})}" method="post"
+                          onsubmit="return confirm('Excluir este cliente e TODAS as contas dele?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i> Excluir</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="dd-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Contas do cliente</h5>
+                    <a th:href="@{/contas/nova(clienteId=${cliente.id})}" class="btn btn-sm btn-dd"><i class="fas fa-plus"></i> Abrir conta</a>
+                </div>
+                <p th:if="${#lists.isEmpty(contas)}" class="text-muted mb-0">Este cliente ainda não tem contas.</p>
+                <div class="table-responsive" th:unless="${#lists.isEmpty(contas)}">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                        <tr><th>Agência</th><th>Conta</th><th>Tipo</th><th class="text-end">Saldo</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="ct : ${contas}">
+                            <td th:text="${ct.agencia}"></td>
+                            <td th:text="${ct.numero}"></td>
+                            <td><span class="badge badge-tipo" th:text="${ct.tipo.descricao}"></span></td>
+                            <td class="text-end" th:text="'R$ ' + ${#numbers.formatDecimal(ct.saldo, 1, 'POINT', 2, 'COMMA')}"></td>
+                            <td class="text-end"><a th:href="@{/contas/{id}(id=${ct.id})}" class="btn btn-sm btn-outline-dark"><i class="fas fa-eye"></i></a></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a th:href="@{/clientes}" class="btn btn-outline-secondary mt-4"><i class="fas fa-arrow-left"></i> Voltar</a>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

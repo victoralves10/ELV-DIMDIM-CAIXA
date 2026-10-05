@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+
+<!-- ===================== HEAD ===================== -->
+<head th:fragment="head(titulo)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${titulo} + ' | DimDim'">DimDim</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --dd-amarelo: #FFE14D;
+            --dd-amarelo-forte: #F5C400;
+            --dd-grafite: #2E2E2E;
+            --dd-fundo: #F7F6F2;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: var(--dd-fundo);
+            color: var(--dd-grafite);
+            font-family: 'Nunito', sans-serif;
+        }
+        main { flex: 1; }
+        .dd-navbar { background: var(--dd-grafite); }
+        .dd-navbar .navbar-brand { color: var(--dd-amarelo) !important; font-weight: 800; letter-spacing: .5px; }
+        .dd-navbar .nav-link { color: #fff !important; }
+        .dd-navbar .nav-link:hover, .dd-navbar .nav-link.active { color: var(--dd-amarelo) !important; }
+        .dd-logo {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 34px; height: 34px; border-radius: 50%;
+            background: var(--dd-amarelo); color: var(--dd-grafite);
+            font-weight: 800; font-size: .8rem; margin-right: 8px;
+        }
+        .dd-titulo { font-weight: 800; margin: 1.5rem 0 1rem; }
+        .dd-card { background: #fff; border: 0; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,.06); }
+        .btn-dd { background: var(--dd-amarelo); color: var(--dd-grafite); font-weight: 700; border: 0; }
+        .btn-dd:hover { background: var(--dd-amarelo-forte); color: var(--dd-grafite); }
+        .table thead th { background: var(--dd-grafite); color: #fff; border-color: var(--dd-grafite); }
+        .table td, .table th { vertical-align: middle; }
+        .badge-tipo { background: #FFF4B8; color: var(--dd-grafite); font-weight: 700; }
+        .dd-footer { background: var(--dd-grafite); color: #bbb; }
+        .dd-footer strong { color: var(--dd-amarelo); }
+        .form-label { font-weight: 600; }
+    </style>
+</head>
+
+<body>
+
+<!-- ===================== HEADER ===================== -->
+<header th:fragment="header(ativo)">
+    <nav class="navbar navbar-expand-lg dd-navbar">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" th:href="@{/}">
+                <span class="dd-logo">dd</span> DimDim
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu"
+                    aria-controls="menu" aria-expanded="false" aria-label="Abrir menu">
+                <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="menu">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" th:classappend="${ativo == 'home'} ? 'active'" th:href="@{/}">Início</a></li>
+                    <li class="nav-item"><a class="nav-link" th:classappend="${ativo == 'clientes'} ? 'active'" th:href="@{/clientes}"><i class="fas fa-users"></i> Clientes</a></li>
+                    <li class="nav-item"><a class="nav-link" th:classappend="${ativo == 'contas'} ? 'active'" th:href="@{/contas}"><i class="fas fa-wallet"></i> Contas</a></li>
+                    <li class="nav-item"><a class="nav-link" th:classappend="${ativo == 'caixa'} ? 'active'" th:href="@{/caixa}"><i class="fas fa-money-bill-wave"></i> Caixa Eletrônico</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<!-- ===================== ALERTAS ===================== -->
+<div th:fragment="alertas">
+    <div th:if="${mensagem}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle"></i> <span th:text="${mensagem}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
+    <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle"></i> <span th:text="${erro}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
+</div>
+
+<!-- ===================== FOOTER ===================== -->
+<footer th:fragment="footer" class="dd-footer text-center py-3 mt-5">
+    <small>&copy; 2026 <strong>DimDim</strong> &middot; Web App + Azure SQL Database &middot; Projeto DevOps Tools &amp; Cloud Computing</small>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</footer>
+
+</body>
+</html>
