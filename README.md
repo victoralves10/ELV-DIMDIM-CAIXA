@@ -2,7 +2,7 @@
 
 Projeto do **2º Checkpoint (2º semestre)** da disciplina *DevOps Tools & Cloud Computing* — FIAP.
 
-> Grupo: **ELV** · Vídeo de demonstração: **[LINK_DO_VIDEO](https://youtube.com/)**
+> Grupo: **ELV** · Vídeo de demonstração: **[LINK_DO_VIDEO](https://youtu.be/K8kqZRYUqEY)**
 
 ## 📑 Sumário
 
